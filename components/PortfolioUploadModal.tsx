@@ -1,16 +1,18 @@
 
 import React, { useState, useRef } from 'react';
-import { GalleryItem } from '../types.ts';
+import { GalleryItem, Folder } from '../types.ts';
 
 interface Props {
   isOpen: boolean;
+  folders: Folder[];
   onClose: () => void;
   onUploadSuccess: (item: GalleryItem) => void;
 }
 
-const PortfolioUploadModal: React.FC<Props> = ({ isOpen, onClose, onUploadSuccess }) => {
+const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUploadSuccess }) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('개인 자산');
+  const [selectedFolderId, setSelectedFolderId] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +46,7 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, onClose, onUploadSucces
       contentSrc: objectUrl,
       fileData: file,
       type: type as any,
+      folderId: selectedFolderId || undefined,
       timestamp: Date.now()
     };
 
@@ -51,6 +54,7 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, onClose, onUploadSucces
     onClose();
     setTitle('');
     setFile(null);
+    setSelectedFolderId('');
   };
 
   return (
@@ -90,16 +94,29 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, onClose, onUploadSucces
                 required
               />
               
-              <select 
-                className="w-full px-6 py-4 rounded-2xl bg-gray-50 border border-transparent focus:border-yeonji outline-none transition-all font-bold appearance-none"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                <option value="개인 자산">개인 자산</option>
-                <option value="브랜딩">브랜딩</option>
-                <option value="미디어">미디어</option>
-                <option value="기획서">기획서</option>
-              </select>
+              <div className="grid grid-cols-2 gap-4">
+                <select 
+                  className="w-full px-6 py-4 rounded-2xl bg-gray-50 border border-transparent focus:border-yeonji outline-none transition-all font-bold appearance-none"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                >
+                  <option value="개인 자산">개인 자산</option>
+                  <option value="브랜딩">브랜딩</option>
+                  <option value="미디어">미디어</option>
+                  <option value="기획서">기획서</option>
+                </select>
+
+                <select 
+                  className="w-full px-6 py-4 rounded-2xl bg-gray-50 border border-transparent focus:border-yeonji outline-none transition-all font-bold appearance-none text-yeonji"
+                  value={selectedFolderId}
+                  onChange={(e) => setSelectedFolderId(e.target.value)}
+                >
+                  <option value="">폴더 없음</option>
+                  {folders.map(folder => (
+                    <option key={folder.id} value={folder.id}>{folder.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <button 
