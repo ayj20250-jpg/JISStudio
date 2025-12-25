@@ -87,14 +87,18 @@ const App: React.FC = () => {
         
         <UploadSection onPublish={handleAddToGallery} />
         
-        <section id="portfolio" className="relative min-h-[400px]">
+        <section className="relative min-h-[400px]">
           {isLoading ? (
             <div className="py-40 text-center flex flex-col items-center">
               <div className="w-10 h-10 border-4 border-yeonji border-t-transparent rounded-full animate-spin mb-4" />
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Accessing Vault</p>
             </div>
           ) : (
-            <Portfolio userProjects={userProjects} onDelete={handleDelete} />
+            <Portfolio 
+              userProjects={userProjects} 
+              onDelete={handleDelete} 
+              onUploadClick={() => setIsUploadModalOpen(true)}
+            />
           )}
         </section>
 
