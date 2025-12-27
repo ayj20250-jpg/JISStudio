@@ -20,52 +20,64 @@ const Hero: React.FC<Props> = ({ onUploadClick }) => {
   }, []);
 
   return (
-    <div id="home" className="relative h-screen flex items-center justify-center overflow-hidden bg-[#f0f4f7]">
-      {/* 
-        서버 배포 시 미디어가 보이도록 하려면 반드시 index.html 기준의 상대 경로를 사용해야 합니다.
-        사용자님의 assets 폴더 안에 hero-bg.jpg 가 있다고 가정하고 경로를 설정합니다.
-      */}
+    <div id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white py-20 md:py-0">
+      {/* Background Layer with Parallax */}
       <div 
-        className="absolute inset-0 z-0 transition-transform duration-1000 ease-out scale-110"
+        className="absolute inset-0 z-0 transition-transform duration-1000 ease-out"
         style={{ 
-          // 상대 경로: ./assets/파일명 형식
-          backgroundImage: "url('./assets/hero-bg.jpg')", 
-          // 파일이 없는 경우를 대비한 대체 이미지 (배포 시 삭제 가능)
-          backgroundColor: '#1a1a1a', 
+          backgroundImage: "url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=80')", 
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          transform: `translate(${mousePos.x * 20}px, ${mousePos.y * 20}px) scale(1.1)`
+          transform: `translate(${mousePos.x * -30}px, ${mousePos.y * -30}px) scale(1.15)`
         }}
       />
       
-      <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/10 to-transparent z-1" />
+      {/* Overlay Gradients for Depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-white/60 z-[1]" />
+      <div className="absolute inset-0 bg-white/10 backdrop-blur-[1px] z-[1]" />
       
-      <div className="relative z-10 text-center px-6 max-w-5xl">
-        <div className="inline-block mb-12 px-6 py-2 border border-black/5 rounded-full bg-white/20 backdrop-blur-2xl animate-fade-in shadow-sm">
-          <span className="text-gray-400 text-[9px] font-bold tracking-[0.6em] uppercase">Premium Asset Archive</span>
+      {/* Main Content */}
+      <div className="relative z-10 text-center px-6 max-w-5xl flex flex-col items-center">
+        <div className="inline-block mb-8 md:mb-12 px-6 py-2 border border-white/20 rounded-full bg-white/10 backdrop-blur-xl animate-fade-in shadow-xl shadow-black/5">
+          <span className="text-gray-900 text-[10px] font-black tracking-[0.6em] uppercase">The Purest Archive</span>
         </div>
         
-        <h1 className="mb-12 animate-fade-up tracking-tighter leading-[0.9]">
-          <span className="block text-4xl md:text-6xl font-extralight text-gray-400 mb-2 lowercase tracking-normal">Lightly,</span>
-          <span className="block text-7xl md:text-[10rem] font-black text-gray-900 -mt-2 md:-mt-6 uppercase">but heavy.</span>
-        </h1>
+        <div className="relative mb-8 md:mb-12">
+          {/* Subtle Glow behind text */}
+          <div className="absolute -inset-10 bg-white/20 blur-[100px] rounded-full z-0" />
+          
+          <h1 className="relative z-10 tracking-tighter leading-[0.85] overflow-hidden">
+            <span className="block text-4xl md:text-6xl font-extralight text-gray-700 mb-2 lowercase tracking-tight opacity-0 animate-[slideUp_1s_ease-out_0.2s_forwards]">
+              as pure as,
+            </span>
+            <span className="block text-6xl md:text-[11rem] font-black text-gray-900 -mt-2 md:-mt-6 uppercase opacity-0 animate-[slideUp_1s_ease-out_0.4s_forwards]">
+              eternal<br/>peaks.
+            </span>
+          </h1>
+        </div>
         
-        <p className="text-lg md:text-xl text-gray-600 mb-16 font-light max-w-xl mx-auto leading-relaxed tracking-tight">
-          당신의 모든 순간을 깃털처럼 가볍게 기록하고,<br /> 
-          바위처럼 묵직한 가치로 보관하는 연지스 스튜디오입니다.
+        <p className="text-base md:text-2xl text-gray-700 mb-12 md:mb-16 font-medium max-w-2xl mx-auto leading-relaxed tracking-tight opacity-0 animate-[slideUp_1s_ease-out_0.6s_forwards]">
+          변하지 않는 설산의 침묵처럼,<br /> 
+          당신의 소중한 데이터는 이곳에서 영원히 빛납니다.
         </p>
         
-        <div className="flex justify-center items-center">
-          <button 
-            onClick={onUploadClick}
-            className="group relative bg-gray-900 hover:bg-yeonji text-white px-14 py-5 rounded-2xl font-black text-sm transition-all shadow-2xl flex items-center gap-4 overflow-hidden"
-          >
-            <span className="relative z-10 uppercase tracking-widest">지금 업로드하기</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </button>
+        {/* Welcome Message Section - Adjusted for visibility */}
+        <div className="opacity-0 animate-[slideUp_1s_ease-out_0.8s_forwards] flex flex-col items-center w-full">
+          <div className="h-[1px] w-16 md:w-24 bg-gray-900/20 mb-6 md:mb-8" />
+          <div className="px-4 py-6 md:py-8 bg-white/30 backdrop-blur-md rounded-[2rem] border border-white/50 shadow-2xl shadow-black/5 w-full max-w-lg">
+            <h3 className="text-xl md:text-4xl font-black text-gray-900 tracking-tighter leading-snug">
+              연지의 홈페이지에<br className="md:hidden" /> 오신 것을 환영합니다.
+            </h3>
+            <p className="text-[9px] md:text-[10px] font-bold text-yeonji uppercase tracking-[0.4em] mt-3 md:mt-4 opacity-70">
+              Welcome to Yeonji's Archive
+            </p>
+          </div>
         </div>
+      </div>
+
+      {/* Scroll Indicator - Positioned with relative safe area */}
+      <div className="absolute bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce opacity-40 hidden sm:block">
+        <div className="w-[1px] h-12 md:h-16 bg-gradient-to-b from-gray-900 to-transparent mx-auto" />
       </div>
     </div>
   );
