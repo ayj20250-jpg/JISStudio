@@ -62,7 +62,10 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
       <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-slide-up">
         <div className="p-8 md:p-10">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">영구 보관소 게시</h2>
+            <div className="flex flex-col">
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight">공용 아카이브 게시</h2>
+              <p className="text-[10px] font-bold text-yeonji uppercase tracking-widest mt-1">This will be shared globally</p>
+            </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
@@ -76,11 +79,14 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
               <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
               {file ? (
                 <div>
-                  <div className="text-3xl mb-2">✅</div>
+                  <div className="text-3xl mb-2">📦</div>
                   <p className="text-yeonji font-bold truncate text-sm">{file.name}</p>
                 </div>
               ) : (
-                <p className="text-gray-400 text-sm font-medium">클릭하여 파일 선택<br/><span className="text-[10px] opacity-60">(사진, 영상, 음악, 문서)</span></p>
+                <div className="space-y-2">
+                  <p className="text-gray-900 text-sm font-black uppercase">파일을 업로드하세요</p>
+                  <p className="text-gray-400 text-[10px] font-medium uppercase tracking-widest">Global sharing mode active</p>
+                </div>
               )}
             </div>
 
@@ -100,10 +106,10 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
+                  <option value="커뮤니티 공유">커뮤니티 공유</option>
                   <option value="개인 자산">개인 자산</option>
                   <option value="브랜딩">브랜딩</option>
                   <option value="미디어">미디어</option>
-                  <option value="기획서">기획서</option>
                 </select>
 
                 <select 
@@ -111,7 +117,7 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
                   value={selectedFolderId}
                   onChange={(e) => setSelectedFolderId(e.target.value)}
                 >
-                  <option value="">폴더 없음</option>
+                  <option value="">폴더 없음 (ROOT)</option>
                   {folders.map(folder => (
                     <option key={folder.id} value={folder.id}>{folder.name}</option>
                   ))}
@@ -119,11 +125,17 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
               </div>
             </div>
 
+            <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+               <p className="text-[10px] text-gray-500 leading-relaxed font-medium">
+                 <strong className="text-gray-900">주의:</strong> 게시된 자산은 연지스 네트워크를 이용하는 모든 사용자가 열람 및 다운로드할 수 있습니다. 민감한 정보는 업로드하지 마세요.
+               </p>
+            </div>
+
             <button 
               type="submit"
-              className="w-full bg-gray-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-yeonji transition-all shadow-xl"
+              className="w-full bg-gray-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-yeonji transition-all shadow-xl flex items-center justify-center gap-3"
             >
-              게시하기
+              <span>🌍</span> 클라우드에 게시하기
             </button>
           </form>
         </div>

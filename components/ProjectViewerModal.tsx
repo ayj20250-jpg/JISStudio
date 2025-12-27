@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { GalleryItem } from '../types.ts';
 
 interface ProjectViewerModalProps {
@@ -9,16 +9,47 @@ interface ProjectViewerModalProps {
 }
 
 const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, onDelete }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
   if (!item) return null;
 
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const link = document.createElement('a');
-    link.href = item.contentSrc || item.image;
-    link.download = `${item.title}_Yeonjis_Archive`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setIsDownloading(true);
+
+    try {
+      const src = item.contentSrc || item.image;
+      const link = document.createElement('a');
+      link.href = src;
+      
+      // 파일 확장자 추출 및 파일명 생성
+      let fileName = item.title;
+      if (item.fileData instanceof File) {
+        const ext = item.fileData.name.split('.').pop();
+        if (ext && !fileName.endsWith(ext)) {
+          fileName = `${fileName}.${ext}`;
+        }
+      } else {
+        // 기본 확장자 매핑
+        const extMap: Record<string, string> = { photo: 'jpg', video: 'mp4', audio: 'mp3', document: 'pdf' };
+        fileName = `${fileName}.${extMap[item.type] || 'file'}`;
+      }
+
+      link.download = fileName;
+      
+      // 모바일 호환성을 위해 새 창 속성 부여 (일부 브라우저 대응)
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("다운로드 중 오류가 발생했습니다.");
+    } finally {
+      setTimeout(() => setIsDownloading(false), 1000);
+    }
   };
 
   const renderContent = () => {
@@ -69,7 +100,6 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center p-0 md:p-6 bg-white/98 backdrop-blur-3xl animate-fade-in overflow-y-auto">
-      {/* Header controls */}
       <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-[310] bg-white/60 backdrop-blur-md md:bg-transparent md:backdrop-blur-none border-b border-gray-100 md:border-none">
         <div className="flex flex-col">
           <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tighter truncate max-w-[180px] md:max-w-2xl uppercase">
@@ -108,9 +138,22 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
         <div className="flex flex-col md:flex-row items-center gap-6 w-full max-w-sm md:max-w-none justify-center">
           <button 
             onClick={handleDownload} 
-            className="w-full md:w-auto bg-gray-900 text-white px-10 py-5 rounded-2xl font-black text-[11px] tracking-[0.2em] hover:bg-yeonji transition-all shadow-2xl shadow-gray-200 transform active:scale-95 uppercase"
+            disabled={isDownloading}
+            className={`w-full md:w-auto px-10 py-5 rounded-2xl font-black text-[11px] tracking-[0.2em] transition-all shadow-2xl transform active:scale-95 uppercase flex items-center justify-center gap-3 ${
+              isDownloading ? 'bg-yeonji text-white animate-pulse' : 'bg-gray-900 text-white hover:bg-yeonji shadow-gray-200'
+            }`}
           >
-            Download Asset
+            {isDownloading ? (
+              <>
+                <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving File...
+              </>
+            ) : (
+              'Download Asset'
+            )}
           </button>
           <span className="hidden md:block text-gray-300 font-light">|</span>
           <p className="text-gray-400 text-[10px] font-bold tracking-widest uppercase">

@@ -9,44 +9,37 @@ const About: React.FC = () => {
           <div>
             <span className="text-yeonji font-bold tracking-widest uppercase text-sm mb-4 block">연지스 소개</span>
             <h2 className="text-4xl md:text-5xl font-bold mb-8 leading-tight">
-              전통의 아름다움과<br />현대의 감각을 잇다.
+              당신의 기록을<br />예술로 만드는 공간
             </h2>
             <div className="space-y-6 text-gray-600 leading-relaxed text-lg">
               <p>
-                '연지(Yeonji)'는 한국 전통의 아름다운 붉은 빛을 상징합니다. 
-                우리는 그 깊이 있는 색채와 감성을 현대적인 비즈니스 솔루션과 디자인에 담아내고자 합니다.
+                연지스(Yeonjis)는 단순한 데이터 보관 이상의 가치를 지향합니다. 
+                흩어져 있는 당신의 자산들을 하나의 완성된 스토리로 엮어냅니다.
               </p>
               <p>
-                연지스는 단순한 대행사가 아닌, 고객사의 철학을 함께 고민하는 파트너입니다. 
-                기술적 완성도와 정서적 울림이 공존하는 결과물을 통해 브랜드의 진정한 가치를 전달합니다.
+                PC와 모바일, 어떤 환경에서도 당신의 미디어가 가장 아름답게 보일 수 있도록 
+                최적의 뷰잉 환경을 제공하며 영구적인 디지털 아카이브를 구축합니다.
               </p>
-            </div>
-            
-            <div className="mt-12 grid grid-cols-2 gap-8">
-              <div>
-                <h4 className="text-3xl font-bold text-yeonji mb-1">150+</h4>
-                <p className="text-sm text-gray-500">완료된 프로젝트</p>
-              </div>
-              <div>
-                <h4 className="text-3xl font-bold text-yeonji mb-1">98%</h4>
-                <p className="text-sm text-gray-500">고객 만족도</p>
-              </div>
             </div>
           </div>
 
           <div className="relative">
-            <div className="rounded-3xl overflow-hidden shadow-2xl">
+            <div className="rounded-3xl overflow-hidden shadow-2xl aspect-[4/3] bg-gray-200">
+              {/* index.html 기준 assets 폴더 내의 이미지를 불러오는 상대 경로 설정 */}
               <img 
-                src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80" 
-                alt="Beautiful Snowy Mountains" 
-                className="w-full h-auto transform transition-transform duration-700 hover:scale-110"
+                src="./assets/about-img.jpg" 
+                alt="Yeonjis Philosophy" 
+                className="w-full h-full object-cover transform transition-transform duration-700 hover:scale-105"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80';
+                }}
               />
             </div>
             <div className="absolute -bottom-8 -left-8 bg-white p-8 rounded-2xl shadow-xl hidden md:block border border-gray-100 max-w-xs">
-              <p className="italic text-gray-700 font-medium">
-                "우리는 보이지 않는 가치를 눈에 보이는 혁신으로 바꿉니다."
+              <p className="italic text-gray-700 font-medium text-sm">
+                "가장 가볍게 시작해서 가장 무거운 결실을 맺습니다."
               </p>
-              <p className="mt-4 text-sm font-bold text-yeonji">— 연지스 크리에이티브 그룹</p>
+              <p className="mt-4 text-[10px] font-black text-yeonji uppercase tracking-widest">— Yeonjis Studio</p>
             </div>
           </div>
         </div>

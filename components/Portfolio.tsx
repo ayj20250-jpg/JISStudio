@@ -33,6 +33,28 @@ const Portfolio: React.FC<PortfolioProps> = ({
     }
   };
 
+  const handleQuickDownload = (e: React.MouseEvent, item: GalleryItem) => {
+    e.stopPropagation();
+    const src = item.contentSrc || item.image;
+    const link = document.createElement('a');
+    link.href = src;
+    
+    let fileName = item.title;
+    if (item.fileData instanceof File) {
+      const ext = item.fileData.name.split('.').pop();
+      if (ext && !fileName.endsWith(ext)) fileName = `${fileName}.${ext}`;
+    } else {
+      const extMap: Record<string, string> = { photo: 'jpg', video: 'mp4', audio: 'mp3', document: 'pdf' };
+      fileName = `${fileName}.${extMap[item.type] || 'file'}`;
+    }
+
+    link.download = fileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleCreateFolder = () => {
     const name = prompt('폴더 이름을 입력하세요:');
     if (name) {
@@ -46,7 +68,6 @@ const Portfolio: React.FC<PortfolioProps> = ({
     }
   };
 
-  // 필터링된 폴더와 프로젝트
   const activeFolders = folders.filter(f => (filterType === 'all' || f.type === filterType) && !currentFolderId);
   const activeProjects = userProjects.filter(p => {
     const typeMatch = filterType === 'all' || p.type === filterType;
@@ -61,9 +82,12 @@ const Portfolio: React.FC<PortfolioProps> = ({
       <div className="max-w-7xl mx-auto px-6">
         <div className="mb-12 md:mb-24 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
           <div className="w-full md:w-auto">
-            <span className="text-yeonji font-black tracking-[0.4em] uppercase text-[9px] mb-3 block animate-fade-in">Cloud Gallery</span>
+            <div className="flex items-center gap-2 mb-3 animate-fade-in">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-gray-400 font-black tracking-[0.4em] uppercase text-[9px] block">Live Cloud Feed</span>
+            </div>
             <div className="flex items-center gap-4">
-              <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-gray-900 leading-none">ARCHIVE</h2>
+              <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-gray-900 leading-none uppercase">Public<br/>Archive</h2>
             </div>
           </div>
           
@@ -91,13 +115,12 @@ const Portfolio: React.FC<PortfolioProps> = ({
                 onClick={onUploadClick}
                 className="flex-1 md:flex-none bg-gray-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-yeonji transition-all shadow-2xl shadow-gray-200 flex items-center justify-center gap-3 transform active:scale-95"
               >
-                <span>＋</span> 게시
+                <span>＋</span> 클라우드 게시
               </button>
             </div>
           </div>
         </div>
 
-        {/* Breadcrumb Navigation */}
         <div className="mb-10 flex items-center gap-4 animate-fade-in">
            <button 
             onClick={() => setCurrentFolderId(null)}
@@ -124,11 +147,10 @@ const Portfolio: React.FC<PortfolioProps> = ({
         {activeFolders.length === 0 && activeProjects.length === 0 ? (
           <div className="py-32 text-center border-4 border-dashed border-gray-50 rounded-[3rem] flex flex-col items-center">
              <span className="text-5xl mb-6 grayscale opacity-30">📦</span>
-             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No Assets Found in this view</p>
+             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No Public Assets Shared Yet</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-            {/* Folder Rendering */}
             {activeFolders.map((folder) => (
               <div 
                 key={folder.id}
@@ -142,11 +164,10 @@ const Portfolio: React.FC<PortfolioProps> = ({
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                   {userProjects.filter(p => p.folderId === folder.id).length} ITEMS
                 </p>
-                <div className="absolute top-8 right-8 text-[8px] bg-yeonji/10 text-yeonji px-2 py-1 rounded-lg font-black">FOLDER</div>
+                <div className="absolute top-8 right-8 text-[8px] bg-gray-900 text-white px-2 py-1 rounded-lg font-black uppercase tracking-tighter">PUBLIC</div>
               </div>
             ))}
 
-            {/* Project Item Rendering */}
             {activeProjects.map((project) => (
               <div 
                 key={project.id}
@@ -162,11 +183,23 @@ const Portfolio: React.FC<PortfolioProps> = ({
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
-                  <div className="absolute top-5 left-5">
-                    <span className="bg-white/95 backdrop-blur-md text-gray-900 px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-xl">
+                  {/* Share Icon */}
+                  <div className="absolute top-5 left-5 flex gap-2">
+                    <span className="bg-white/95 backdrop-blur-md text-gray-900 px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-xl flex items-center gap-1.5">
+                      <span className="w-1 h-1 bg-green-500 rounded-full" />
+                      Global
+                    </span>
+                    <span className="bg-gray-900 text-white px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-xl">
                       {getTypeIcon(project.type)} {project.type}
                     </span>
                   </div>
+
+                  <button 
+                    onClick={(e) => handleQuickDownload(e, project)}
+                    className="absolute top-5 right-5 w-10 h-10 bg-white/90 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 transform hover:scale-110 active:scale-95 text-gray-900 hover:bg-yeonji hover:text-white"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  </button>
 
                   <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
                     <h3 className="text-white text-xl font-black tracking-tighter truncate">{project.title}</h3>
