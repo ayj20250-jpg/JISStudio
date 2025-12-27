@@ -34,18 +34,8 @@ const App: React.FC = () => {
 
         if (savedFolders) setFolders(savedFolders);
 
-        // 로컬 프로젝트 복원
-        const rehydratedLocal = savedProjects.map(proj => {
-          if (proj.fileData instanceof Blob) {
-            const url = URL.createObjectURL(proj.fileData);
-            return { 
-              ...proj, 
-              contentSrc: url, 
-              image: proj.type === 'photo' ? url : proj.image 
-            };
-          }
-          return proj;
-        });
+        // 로컬 프로젝트 복원 (이제 HTTPS URL이 저장되어 있으므로 복잡한 Blob 변환이 필요 없음)
+        const rehydratedLocal = savedProjects;
 
         // 공용 데이터와 로컬 데이터 병합
         const combined = [...rehydratedLocal, ...publicAssets];
@@ -67,9 +57,9 @@ const App: React.FC = () => {
     setUserProjects(prev => [item, ...prev]);
     setSyncStatus('syncing');
     try {
-      // 1. 로컬 IndexedDB 저장
+      // 1. 로컬 IndexedDB 저장 (HTTPS URL 포함)
       await saveProject(item);
-      // 2. 공용 클라우드 게시 시뮬레이션
+      // 2. 공용 클라우드 메타데이터 동기화
       await uploadToPublicArchive(item);
       
       setTimeout(() => setSyncStatus('done'), 800);
@@ -96,7 +86,7 @@ const App: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("이 자산을 삭제하시겠습니까? (공용 데이터는 관리자 권한이 필요할 수 있습니다)")) return;
+    if (!confirm("이 자산을 삭제하시겠습니까?")) return;
     try {
       await deleteProject(id);
       setUserProjects(prev => prev.filter(p => p.id !== id));
@@ -112,7 +102,7 @@ const App: React.FC = () => {
       <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[110] transition-all duration-700 ${syncStatus === 'syncing' ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8 pointer-events-none'}`}>
         <div className="bg-gray-900/80 backdrop-blur-2xl text-white px-8 py-3 rounded-full text-[10px] font-black tracking-[0.4em] flex items-center gap-4 shadow-2xl border border-white/10 uppercase">
           <div className="w-2 h-2 bg-yeonji rounded-full animate-ping" />
-          Syncing with Global Archive
+          CDN Cloud Sync Active
         </div>
       </div>
 
