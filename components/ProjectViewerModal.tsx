@@ -22,17 +22,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
       const link = document.createElement('a');
       link.href = src;
       
-      let fileName = item.title;
-      if (item.fileData instanceof File) {
-        const ext = item.fileData.name.split('.').pop();
-        if (ext && !fileName.endsWith(ext)) {
-          fileName = `${fileName}.${ext}`;
-        }
-      } else {
-        const extMap: Record<string, string> = { photo: 'jpg', video: 'mp4', audio: 'mp3', document: 'pdf' };
-        fileName = `${fileName}.${extMap[item.type] || 'file'}`;
-      }
-
+      const fileName = item.title;
       link.download = fileName;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
@@ -50,7 +40,14 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
 
   const renderContent = () => {
     const src = item.contentSrc || item.image;
-    const isPPT = src.toLowerCase().endsWith('.ppt') || src.toLowerCase().endsWith('.pptx');
+    const lowerSrc = src.toLowerCase();
+    const isPPT = lowerSrc.endsWith('.ppt') || lowerSrc.endsWith('.pptx');
+    const isPDF = lowerSrc.endsWith('.pdf');
+    
+    // 특수 파일 형식 판별 (HWP, 3D Modeling 등)
+    const isSpecialDoc = lowerSrc.endsWith('.hwp') || lowerSrc.endsWith('.hwpx') || 
+                         lowerSrc.endsWith('.obj') || lowerSrc.endsWith('.stl') || 
+                         lowerSrc.endsWith('.zip');
 
     switch (item.type) {
       case 'video':
@@ -61,119 +58,82 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
         );
       case 'audio':
         return (
-          <div className="w-full py-12 md:py-20 px-6 bg-gray-900 rounded-3xl text-center shadow-inner">
-            <div className="text-6xl mb-8 animate-pulse">🎵</div>
+          <div className="w-full py-16 md:py-24 px-6 bg-gray-900 rounded-[3rem] text-center shadow-inner">
+            <div className="text-7xl mb-8 animate-pulse">🎵</div>
             <audio src={src} controls className="w-full max-w-md mx-auto filter invert brightness-200" />
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mt-8">High-Fidelity Audio Playback</p>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.4em] mt-8">Hi-Res Audio Streaming</p>
           </div>
         );
       case 'document':
         if (isPPT) {
-          // Office Online Viewer for PPT files
           const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(src)}`;
           return (
-            <div className="w-full h-[70vh] md:h-[80vh] bg-gray-100 rounded-3xl overflow-hidden border border-gray-200 shadow-inner flex flex-col">
+            <div className="w-full h-[65vh] md:h-[75vh] bg-white rounded-3xl overflow-hidden border border-gray-200 shadow-2xl flex flex-col">
               <div className="bg-[#B7472A] px-6 py-3 flex justify-between items-center text-white">
                 <span className="text-[10px] font-black uppercase tracking-widest">PowerPoint Presentation</span>
-                <span className="text-[10px] font-bold">Live Stream Mode</span>
+                <span className="text-[10px] font-bold">Cloud Viewer</span>
               </div>
-              <iframe 
-                src={officeUrl} 
-                title={item.title} 
-                className="w-full flex-grow bg-white border-none"
-              />
+              <iframe src={officeUrl} title={item.title} className="w-full flex-grow border-none" />
             </div>
           );
         }
-        return (
-          <div className="w-full h-[70vh] md:h-[80vh] bg-gray-100 rounded-3xl overflow-hidden border border-gray-200 shadow-inner flex flex-col">
-            <div className="bg-gray-900 px-6 py-3 border-b border-gray-200 flex justify-between items-center text-white">
-              <span className="text-[10px] font-black uppercase tracking-widest">Document Preview</span>
-              <span className="text-[10px] font-bold text-yeonji">Direct View Mode</span>
+        if (isPDF) {
+          return (
+            <div className="w-full h-[65vh] md:h-[75vh] bg-gray-100 rounded-3xl overflow-hidden border border-gray-200 shadow-2xl flex flex-col">
+              <iframe src={`${src}#toolbar=0`} title={item.title} className="w-full flex-grow bg-white border-none" />
             </div>
-            <iframe 
-              src={`${src}#toolbar=0`} 
-              title={item.title} 
-              className="w-full flex-grow bg-white border-none"
-              style={{ minHeight: '500px' }}
-            />
+          );
+        }
+        // HWP, 3D 모델링, 기타 문서용 UI
+        return (
+          <div className="w-full py-20 px-10 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200 flex flex-col items-center text-center">
+            <div className="w-24 h-24 bg-white rounded-3xl shadow-xl flex items-center justify-center text-4xl mb-8">
+              {lowerSrc.endsWith('.hwp') ? '📝' : '🧊'}
+            </div>
+            <h3 className="text-2xl font-black text-gray-900 mb-2 uppercase">{item.title}</h3>
+            <p className="text-gray-500 text-sm mb-10 max-w-xs">
+              이 파일 형식은 브라우저에서 직접 미리보기를 지원하지 않습니다. 아래 버튼을 눌러 파일을 확인하세요.
+            </p>
+            <button 
+              onClick={handleDownload}
+              className="bg-gray-900 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-yeonji transition-all transform active:scale-95 shadow-xl"
+            >
+              파일 열기 / 다운로드
+            </button>
           </div>
         );
       default:
         return (
-          <div className="relative group max-h-[80vh] w-full flex items-center justify-center overflow-hidden">
-            <img 
-              src={src} 
-              alt={item.title}
-              className="max-w-full max-h-[80vh] rounded-2xl md:rounded-3xl shadow-2xl object-contain bg-white/30 backdrop-blur-sm" 
-            />
-            <div className="absolute inset-0 rounded-2xl md:rounded-3xl shadow-[inset_0_0_80px_rgba(0,0,0,0.05)] pointer-events-none" />
+          <div className="relative group max-h-[75vh] w-full flex items-center justify-center">
+            <img src={src} alt={item.title} className="max-w-full max-h-[75vh] rounded-2xl md:rounded-3xl shadow-2xl object-contain bg-white" />
           </div>
         );
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-0 md:p-6 bg-white/98 backdrop-blur-3xl animate-fade-in overflow-y-auto">
-      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-[310] bg-white/60 backdrop-blur-md md:bg-transparent md:backdrop-blur-none border-b border-gray-100 md:border-none">
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 md:p-10 bg-white/95 backdrop-blur-3xl animate-fade-in overflow-y-auto">
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-[310]">
         <div className="flex flex-col">
-          <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tighter truncate max-w-[180px] md:max-w-2xl uppercase">
-            {item.title}
-          </h2>
-          <p className="text-yeonji font-black text-[9px] tracking-[0.2em] uppercase opacity-80">
-            {item.category} • {item.type}
-          </p>
+          <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tighter truncate max-w-[200px] md:max-w-xl uppercase">{item.title}</h2>
+          <p className="text-yeonji font-black text-[9px] tracking-[0.3em] uppercase opacity-70">{item.category} • {item.type}</p>
         </div>
-        
-        <div className="flex items-center gap-2 md:gap-4">
-          {onDelete && (
-            <button 
-              onClick={() => { if(confirm('영구 삭제하시겠습니까?')) { onDelete(item.id); onClose(); } }} 
-              className="p-3 text-red-500 bg-red-50 rounded-2xl hover:bg-red-500 hover:text-white transition-all transform active:scale-95 shadow-sm"
-              title="삭제"
-            >
-              <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            </button>
-          )}
-          <button 
-            onClick={onClose} 
-            className="p-3 text-gray-900 bg-gray-100 rounded-2xl hover:bg-gray-900 hover:text-white transition-all transform active:scale-95 shadow-sm"
-            title="닫기"
-          >
-            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
+        <button onClick={onClose} className="p-4 text-gray-900 bg-gray-100 rounded-2xl hover:bg-gray-900 hover:text-white transition-all transform active:scale-95">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
       </div>
 
-      <div className="w-full max-w-6xl mt-28 md:mt-24 mb-16 px-4 md:px-0 flex flex-col items-center">
-        <div className="w-full flex justify-center mb-10">
-          {renderContent()}
-        </div>
-        
-        <div className="flex flex-col md:flex-row items-center gap-6 w-full max-w-sm md:max-w-none justify-center">
-          <button 
-            onClick={handleDownload} 
-            disabled={isDownloading}
-            className={`w-full md:w-auto px-10 py-5 rounded-2xl font-black text-[11px] tracking-[0.2em] transition-all shadow-2xl transform active:scale-95 uppercase flex items-center justify-center gap-3 ${
-              isDownloading ? 'bg-yeonji text-white animate-pulse' : 'bg-gray-900 text-white hover:bg-yeonji shadow-gray-200'
-            }`}
-          >
-            {isDownloading ? (
-              <>
-                <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Saving File...
-              </>
-            ) : (
-              'Download Asset'
-            )}
+      <div className="w-full max-w-6xl mt-24 mb-10 flex flex-col items-center">
+        {renderContent()}
+        <div className="mt-12 flex flex-col md:flex-row items-center gap-6">
+          <button onClick={handleDownload} disabled={isDownloading} className="px-12 py-5 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-yeonji transition-all shadow-2xl disabled:opacity-50">
+            {isDownloading ? 'Downloading...' : 'Save to Device'}
           </button>
-          <span className="hidden md:block text-gray-300 font-light">|</span>
-          <p className="text-gray-400 text-[10px] font-bold tracking-widest uppercase">
-            Archived on {new Date(item.timestamp).toLocaleDateString()}
-          </p>
+          {onDelete && (
+            <button onClick={() => { if(confirm('영구 삭제하시겠습니까?')) { onDelete(item.id); onClose(); } }} className="text-red-500 font-black text-[10px] uppercase tracking-widest hover:underline">
+              Remove Asset
+            </button>
+          )}
         </div>
       </div>
     </div>

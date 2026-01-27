@@ -25,11 +25,16 @@ const Portfolio: React.FC<PortfolioProps> = ({
   const [filterType, setFilterType] = useState<'all' | 'photo' | 'video' | 'audio' | 'document'>('all');
 
   const getTypeIcon = (type: string, src?: string) => {
-    if (type === 'document' && src?.toLowerCase().endsWith('.ppt') || src?.toLowerCase().endsWith('.pptx')) return '📊';
+    const s = src?.toLowerCase() || "";
+    if (type === 'document') {
+      if (s.endsWith('.ppt') || s.endsWith('.pptx')) return '📊';
+      if (s.endsWith('.hwp') || s.endsWith('.hwpx')) return '📝';
+      if (s.endsWith('.obj') || s.endsWith('.stl')) return '🧊';
+      return '📑';
+    }
     switch(type) {
       case 'video': return '🎬';
       case 'audio': return '🎵';
-      case 'document': return '📑';
       default: return '📸';
     }
   };
@@ -39,17 +44,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
     const src = item.contentSrc || item.image;
     const link = document.createElement('a');
     link.href = src;
-    
-    let fileName = item.title;
-    if (item.fileData instanceof File) {
-      const ext = item.fileData.name.split('.').pop();
-      if (ext && !fileName.endsWith(ext)) fileName = `${fileName}.${ext}`;
-    } else {
-      const extMap: Record<string, string> = { photo: 'jpg', video: 'mp4', audio: 'mp3', document: 'pdf' };
-      fileName = `${fileName}.${extMap[item.type] || 'file'}`;
-    }
-
-    link.download = fileName;
+    link.download = item.title;
     link.target = '_blank';
     document.body.appendChild(link);
     link.click();
@@ -79,150 +74,89 @@ const Portfolio: React.FC<PortfolioProps> = ({
   const currentFolderName = folders.find(f => f.id === currentFolderId)?.name;
 
   return (
-    <section id="portfolio" className="py-20 md:py-32 bg-white">
+    <section id="portfolio" className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="mb-12 md:mb-24 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
-          <div className="w-full md:w-auto">
-            <div className="flex items-center gap-2 mb-3 animate-fade-in">
+        <div className="mb-20 flex flex-col md:flex-row justify-between items-end gap-10">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-gray-400 font-black tracking-[0.4em] uppercase text-[9px] block">Live Cloud Feed</span>
+              <span className="text-gray-400 font-black tracking-[0.5em] uppercase text-[9px]">HTTPS Global Network</span>
             </div>
-            <div className="flex items-center gap-4">
-              <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-gray-900 leading-none uppercase">Public<br/>Archive</h2>
-            </div>
+            <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-gray-900 leading-none uppercase">YEONJIS<br/>VAULT</h2>
           </div>
           
-          <div className="flex flex-col items-start md:items-end gap-6 w-full md:w-auto">
-            <div className="flex gap-2 bg-gray-50 p-1.5 rounded-2xl overflow-x-auto w-full md:w-auto">
+          <div className="flex flex-col items-end gap-6 w-full md:w-auto">
+            <div className="flex gap-2 bg-gray-50 p-2 rounded-2xl overflow-x-auto max-w-full">
               {['all', 'photo', 'video', 'audio', 'document'].map((t) => (
                 <button
                   key={t}
                   onClick={() => { setFilterType(t as any); setCurrentFolderId(null); }}
-                  className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterType === t ? 'bg-gray-900 text-white shadow-lg shadow-gray-200' : 'text-gray-400 hover:text-gray-900'}`}
+                  className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterType === t ? 'bg-gray-900 text-white shadow-xl' : 'text-gray-400 hover:text-gray-900'}`}
                 >
                   {t === 'all' ? '전체' : t}
                 </button>
               ))}
             </div>
-
-            <div className="flex gap-4 w-full md:w-auto">
-              <button 
-                onClick={handleCreateFolder}
-                className="flex-1 md:flex-none border-2 border-gray-100 text-gray-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:border-yeonji hover:text-yeonji transition-all flex items-center justify-center gap-3 transform active:scale-95"
-              >
-                <span>📂</span> 새 폴더
-              </button>
-              <button 
-                onClick={onUploadClick}
-                className="flex-1 md:flex-none bg-gray-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-yeonji transition-all shadow-2xl shadow-gray-200 flex items-center justify-center gap-3 transform active:scale-95"
-              >
-                <span>＋</span> 클라우드 게시
-              </button>
+            <div className="flex gap-4">
+              <button onClick={handleCreateFolder} className="px-8 py-4 border-2 border-gray-100 rounded-2xl font-black text-xs uppercase tracking-widest hover:border-yeonji transition-all">📂 NEW FOLDER</button>
+              <button onClick={onUploadClick} className="px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-yeonji transition-all shadow-2xl">＋ UPLOAD</button>
             </div>
           </div>
         </div>
 
-        <div className="mb-10 flex items-center gap-4 animate-fade-in bg-gray-50 p-4 rounded-2xl border border-gray-100">
+        <div className="mb-10 flex items-center gap-4 bg-gray-50 p-4 rounded-3xl border border-gray-100">
            <button 
             onClick={() => setCurrentFolderId(null)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${!currentFolderId ? 'bg-yeonji text-white shadow-lg' : 'text-gray-400 hover:text-gray-900 hover:bg-white'}`}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${!currentFolderId ? 'bg-yeonji text-white shadow-lg' : 'text-gray-400 hover:text-gray-900'}`}
            >
-            <span className="text-sm">🏠</span> ROOT (최상위)
+            🏠 ROOT
            </button>
            {currentFolderId && (
              <>
-               <span className="text-gray-200">/</span>
-               <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200">
-                 <span className="text-sm">📂</span>
-                 <span className="text-[11px] font-black uppercase tracking-widest text-yeonji">
-                   {currentFolderName}
-                 </span>
+               <span className="text-gray-300">/</span>
+               <div className="px-5 py-2.5 bg-white rounded-xl shadow-sm border border-gray-200 text-[11px] font-black uppercase tracking-widest text-yeonji flex items-center gap-2">
+                 <span>📂</span> {currentFolderName}
                </div>
-               <button 
-                 onClick={() => { if(confirm('폴더를 삭제하시겠습니까?')) { onDeleteFolder(currentFolderId); setCurrentFolderId(null); } }}
-                 className="ml-auto text-red-400 text-[9px] font-bold uppercase tracking-widest hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
-               >
-                 Delete Folder
-               </button>
+               <button onClick={() => { if(confirm('폴더를 삭제하시겠습니까?')) { onDeleteFolder(currentFolderId); setCurrentFolderId(null); } }} className="ml-auto text-red-400 text-[9px] font-bold uppercase tracking-widest">Delete Folder</button>
              </>
            )}
         </div>
 
-        {activeFolders.length === 0 && activeProjects.length === 0 ? (
-          <div className="py-32 text-center border-4 border-dashed border-gray-50 rounded-[3rem] flex flex-col items-center">
-             <span className="text-5xl mb-6 grayscale opacity-30">📦</span>
-             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No Public Assets Shared Yet</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-            {activeFolders.map((folder) => (
-              <div 
-                key={folder.id}
-                onClick={() => setCurrentFolderId(folder.id)}
-                className="group bg-gray-50/50 rounded-[2rem] p-8 border-2 border-transparent hover:border-yeonji/20 hover:bg-white hover:shadow-xl transition-all cursor-pointer flex flex-col relative"
-              >
-                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm mb-6 group-hover:scale-110 transition-transform">
-                  📁
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {activeFolders.map((folder) => (
+            <div key={folder.id} onClick={() => setCurrentFolderId(folder.id)} className="group bg-gray-50 rounded-[2.5rem] p-10 border-2 border-transparent hover:border-yeonji/20 hover:bg-white hover:shadow-2xl transition-all cursor-pointer text-center">
+              <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-4xl shadow-sm mx-auto mb-6 group-hover:scale-110 transition-transform">📁</div>
+              <h3 className="text-lg font-black text-gray-900 mb-1">{folder.name}</h3>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{userProjects.filter(p => p.folderId === folder.id).length} ASSETS</p>
+            </div>
+          ))}
+
+          {activeProjects.map((project) => (
+            <div key={project.id} onClick={() => setSelectedProject(project)} className="group bg-white rounded-[2.5rem] overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-gray-100">
+              <div className="aspect-square relative bg-gray-50">
+                <img src={project.image} alt={project.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="absolute top-5 left-5 flex gap-2">
+                  <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5">
+                    {getTypeIcon(project.type, project.contentSrc)} {project.type}
+                  </span>
                 </div>
-                <h3 className="text-lg font-black text-gray-900 mb-1">{folder.name}</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  {userProjects.filter(p => p.folderId === folder.id).length} ITEMS
-                </p>
-                <div className="absolute top-8 right-8 text-[8px] bg-gray-900 text-white px-2 py-1 rounded-lg font-black uppercase tracking-tighter">PUBLIC</div>
-              </div>
-            ))}
 
-            {activeProjects.map((project) => (
-              <div 
-                key={project.id}
-                onClick={() => setSelectedProject(project)}
-                className="group relative bg-gray-50 rounded-[2rem] overflow-hidden cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl animate-slide-up"
-              >
-                <div className="aspect-square relative overflow-hidden bg-gray-200">
-                  <img 
-                    src={project.image} 
-                    alt={project.title} 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  <div className="absolute top-5 left-5 flex gap-2">
-                    <span className="bg-white/95 backdrop-blur-md text-gray-900 px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-xl flex items-center gap-1.5">
-                      <span className="w-1 h-1 bg-green-500 rounded-full" />
-                      Global
-                    </span>
-                    <span className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-xl flex items-center gap-1.5 ${
-                      project.contentSrc?.toLowerCase().endsWith('.ppt') || project.contentSrc?.toLowerCase().endsWith('.pptx') 
-                      ? 'bg-[#B7472A] text-white' : 'bg-gray-900 text-white'
-                    }`}>
-                      {getTypeIcon(project.type, project.contentSrc)} {project.type}
-                    </span>
-                  </div>
-
-                  <button 
-                    onClick={(e) => handleQuickDownload(e, project)}
-                    className="absolute top-5 right-5 w-10 h-10 bg-white/90 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 transform hover:scale-110 active:scale-95 text-gray-900 hover:bg-yeonji hover:text-white"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                  </button>
-
-                  <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                    <h3 className="text-white text-xl font-black tracking-tighter truncate">{project.title}</h3>
-                    <p className="text-white/60 text-[8px] font-bold uppercase tracking-widest">{project.category}</p>
-                  </div>
+                <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
+                  <h3 className="text-white text-lg font-black tracking-tighter truncate mb-1">{project.title}</h3>
+                  <p className="text-white/60 text-[8px] font-bold uppercase tracking-widest">{project.category}</p>
                 </div>
+                
+                <button onClick={(e) => handleQuickDownload(e, project)} className="absolute top-5 right-5 w-10 h-10 bg-white/90 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-yeonji hover:text-white">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                </button>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
-
-      <ProjectViewerModal 
-        item={selectedProject} 
-        onClose={() => setSelectedProject(null)} 
-        onDelete={onDelete}
-      />
+      <ProjectViewerModal item={selectedProject} onClose={() => setSelectedProject(null)} onDelete={onDelete} />
     </section>
   );
 };
