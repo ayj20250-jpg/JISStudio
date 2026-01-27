@@ -22,7 +22,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
 }) => {
   const [selectedProject, setSelectedProject] = useState<GalleryItem | null>(null);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<'all' | 'photo' | 'video' | 'audio' | 'document' | 'link'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'photo' | 'video' | 'document' | 'link'>('all');
 
   const getTypeIcon = (type: string, src?: string) => {
     const s = src?.toLowerCase() || "";
@@ -35,15 +35,12 @@ const Portfolio: React.FC<PortfolioProps> = ({
     return type === 'video' ? '🎬' : type === 'audio' ? '🎵' : '📸';
   };
 
-  const handleCreateFolder = () => {
-    const name = prompt('폴더 이름을 입력하세요:');
-    if (name) {
-      onCreateFolder({
-        id: 'folder-' + Math.random().toString(36).substr(2, 9),
-        name,
-        type: filterType === 'link' ? 'all' : filterType as any,
-        timestamp: Date.now()
-      });
+  const getFavicon = (url: string) => {
+    try {
+      const domain = new URL(url).hostname;
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    } catch {
+      return null;
     }
   };
 
@@ -55,59 +52,57 @@ const Portfolio: React.FC<PortfolioProps> = ({
   });
 
   return (
-    <section id="portfolio" className="py-20 bg-white">
+    <section id="portfolio" className="py-16 md:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <div className="mb-16 flex flex-col md:flex-row justify-between items-end gap-8">
+        <div className="mb-12 flex flex-col md:flex-row justify-between items-end gap-6">
           <div>
-            <span className="text-gray-400 font-black tracking-[0.5em] uppercase text-[9px] mb-2 block">Archive System</span>
-            <h2 className="text-5xl md:text-8xl font-black tracking-tighter text-gray-900 leading-none uppercase">YEONJIS<br/>VAULT</h2>
+            <span className="text-gray-400 font-black tracking-[0.4em] uppercase text-[9px] mb-2 block">Vault Archive</span>
+            <h2 className="text-4xl md:text-7xl font-black tracking-tighter text-gray-900 leading-none uppercase">YEONJIS<br/>ASSETS</h2>
           </div>
           <div className="flex flex-col items-end gap-4 w-full md:w-auto">
-            <div className="flex gap-1.5 bg-gray-50 p-1.5 rounded-2xl overflow-x-auto w-full md:w-auto scrollbar-hide">
+            <div className="flex gap-1 bg-gray-100 p-1 rounded-xl overflow-x-auto w-full md:w-auto scrollbar-hide">
               {['all', 'photo', 'video', 'document', 'link'].map((t) => (
                 <button
                   key={t}
                   onClick={() => { setFilterType(t as any); setCurrentFolderId(null); }}
-                  className={`px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterType === t ? 'bg-gray-900 text-white' : 'text-gray-400'}`}
+                  className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${filterType === t ? 'bg-gray-900 text-white shadow-md' : 'text-gray-400'}`}
                 >
                   {t}
                 </button>
               ))}
             </div>
             <div className="flex gap-2 w-full md:w-auto">
-              <button onClick={handleCreateFolder} className="flex-1 md:flex-none border-2 border-gray-100 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest">FOLDER</button>
-              <button onClick={onUploadClick} className="flex-1 md:flex-none bg-gray-900 text-white px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest">UPLOAD</button>
+              <button onClick={onUploadClick} className="flex-1 md:flex-none bg-gray-900 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest">UPLOAD</button>
             </div>
           </div>
         </div>
 
-        <div className="mb-8 flex items-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
-           <button onClick={() => setCurrentFolderId(null)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase ${!currentFolderId ? 'bg-yeonji text-white shadow-lg' : 'text-gray-400'}`}>🏠 ROOT</button>
-           {currentFolderId && <span className="text-gray-300">/</span>}
-           {currentFolderId && <div className="px-4 py-2 bg-white rounded-xl text-[10px] font-black uppercase text-yeonji border border-gray-200">📂 {folders.find(f => f.id === currentFolderId)?.name}</div>}
-        </div>
-
-        {/* Mobile: 1 or 2 columns, Desktop: 4 columns */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-8">
+        {/* Mobile Responsive Grid: 2 columns on small mobile, 3-4 on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {activeFolders.map((folder) => (
-            <div key={folder.id} onClick={() => setCurrentFolderId(folder.id)} className="bg-gray-50 rounded-[2rem] p-6 md:p-10 border-2 border-transparent hover:border-yeonji/20 hover:bg-white hover:shadow-2xl transition-all cursor-pointer text-center">
-              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm mx-auto mb-4">📁</div>
-              <h3 className="text-sm md:text-lg font-black text-gray-900 truncate">{folder.name}</h3>
+            <div key={folder.id} onClick={() => setCurrentFolderId(folder.id)} className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:border-yeonji/20 hover:bg-white transition-all cursor-pointer text-center flex flex-col items-center justify-center">
+              <div className="text-3xl mb-2">📁</div>
+              <h3 className="text-[11px] md:text-sm font-black text-gray-900 truncate w-full">{folder.name}</h3>
             </div>
           ))}
 
           {activeProjects.map((project) => (
-            <div key={project.id} onClick={() => setSelectedProject(project)} className="group bg-white rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden cursor-pointer shadow-sm hover:shadow-2xl transition-all border border-gray-100">
+            <div key={project.id} onClick={() => setSelectedProject(project)} className="group bg-white rounded-2xl overflow-hidden cursor-pointer shadow-sm border border-gray-100 transition-all hover:-translate-y-1">
               <div className="aspect-square relative bg-gray-50 overflow-hidden">
-                <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute top-3 left-3 flex gap-1.5">
-                  <span className="bg-white/95 px-2 py-1 rounded-lg text-[7px] font-black uppercase tracking-widest shadow-md">
+                {project.type === 'link' ? (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-gray-100">
+                    <img src={getFavicon(project.contentSrc || '') || ''} className="w-12 h-12 rounded-xl mb-4 shadow-sm" alt="favicon" />
+                    <p className="text-[10px] font-black text-gray-900 text-center line-clamp-2 uppercase tracking-tight">{project.title}</p>
+                    <p className="text-[8px] text-gray-400 mt-2 truncate w-full text-center">{new URL(project.contentSrc || '').hostname}</p>
+                  </div>
+                ) : (
+                  <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute top-2 left-2">
+                  <span className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-[7px] font-black uppercase tracking-widest shadow-sm">
                     {getTypeIcon(project.type, project.contentSrc)} {project.type}
                   </span>
-                </div>
-                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all">
-                  <h3 className="text-white text-xs md:text-sm font-black truncate">{project.title}</h3>
                 </div>
               </div>
             </div>
