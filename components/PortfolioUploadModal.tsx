@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { GalleryItem, Folder } from '../types.ts';
-import { uploadFileToCloud } from '../services/apiService';
+import { uploadFileToCloud } from '../services/apiService.ts';
 
 interface Props {
   isOpen: boolean;
@@ -59,7 +59,7 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
 
     const newItem: GalleryItem = {
       id: Math.random().toString(36).substr(2, 9),
-      title: title,
+      title: title || 'Unnamed Asset',
       category: category,
       image: fileType === 'photo' ? cloudUrl : 
              title.toLowerCase().includes('ppt') ? 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=400&q=80' :
@@ -70,15 +70,27 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
       timestamp: Date.now()
     };
 
+    // 즉시 App 상태로 전달
     onUploadSuccess(newItem);
-    onClose();
+    
+    // 폼 초기화 및 모달 닫기
     resetForm();
+    onClose();
+
+    // 갤러리 섹션으로 자동 스크롤 (사용자 확인용)
+    setTimeout(() => {
+      const portfolioSection = document.getElementById('portfolio');
+      if (portfolioSection) {
+        portfolioSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 300);
   };
 
   const resetForm = () => {
     setTitle('');
     setCloudUrl(null);
     setSelectedFolderId('');
+    setFileType('');
     setIsUploading(false);
   };
 
@@ -91,7 +103,7 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
               <h2 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">Cloud Archive</h2>
               <p className="text-[10px] font-bold text-yeonji uppercase tracking-widest mt-1">HTTPS Persistence Enabled</p>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors">
+            <button onClick={() => { resetForm(); onClose(); }} className="text-gray-400 hover:text-gray-900 transition-colors">
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
@@ -108,6 +120,7 @@ const PortfolioUploadModal: React.FC<Props> = ({ isOpen, folders, onClose, onUpl
                 <div className="animate-fade-in">
                   <div className="text-5xl mb-4">🌍</div>
                   <p className="text-green-600 font-black text-sm uppercase tracking-wider">Ready to Synchronize</p>
+                  <p className="text-[9px] text-gray-400 mt-2 truncate max-w-xs mx-auto">{title}</p>
                 </div>
               ) : (
                 <div className="space-y-3">

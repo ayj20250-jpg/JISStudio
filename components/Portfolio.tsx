@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { GalleryItem, Folder } from '../types.ts';
 import ProjectViewerModal from './ProjectViewerModal.tsx';
 
@@ -52,12 +52,20 @@ const Portfolio: React.FC<PortfolioProps> = ({
     }
   };
 
-  const activeFolders = folders.filter(f => (filterType === 'all' || f.type === filterType) && !currentFolderId);
-  const activeProjects = userProjects.filter(p => {
-    const typeMatch = filterType === 'all' || p.type === filterType;
-    const folderMatch = p.folderId === (currentFolderId || undefined);
-    return typeMatch && folderMatch;
-  });
+  // 계산된 필터링 결과 (성능을 위해 useMemo 사용)
+  const activeFolders = useMemo(() => {
+    return folders.filter(f => (filterType === 'all' || f.type === filterType) && !currentFolderId);
+  }, [folders, filterType, currentFolderId]);
+
+  const activeProjects = useMemo(() => {
+    return userProjects.filter(p => {
+      const typeMatch = filterType === 'all' || p.type === filterType;
+      // p.folderId가 없거나 빈 문자열일 때 Root(null)로 취급
+      const pFolder = p.folderId || null;
+      const folderMatch = pFolder === currentFolderId;
+      return typeMatch && folderMatch;
+    });
+  }, [userProjects, filterType, currentFolderId]);
 
   return (
     <section id="portfolio" className="py-16 md:py-24 bg-white overflow-hidden">
@@ -80,40 +88,62 @@ const Portfolio: React.FC<PortfolioProps> = ({
               ))}
             </div>
             <div className="flex gap-2 w-full md:w-auto">
+              <button 
+                onClick={() => {
+                  const name = prompt('새 폴더 이름을 입력하세요:');
+                  if (name) {
+                    onCreateFolder({
+                      id: 'folder-' + Math.random().toString(36).substr(2, 9),
+                      name,
+                      type: 'all',
+                      timestamp: Date.now()
+                    });
+                  }
+                }}
+                className="flex-1 md:flex-none border-2 border-gray-100 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:border-yeonji transition-all"
+              >
+                + Folder
+              </button>
               <button onClick={onUploadClick} className="flex-1 md:flex-none bg-gray-900 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest">UPLOAD</button>
             </div>
           </div>
         </div>
 
-        {/* Folder Hierarchy Info */}
+        {/* 폴더 계층 내비게이션 */}
         <div className="mb-6 flex items-center gap-2 overflow-x-auto scrollbar-hide">
           <button 
             onClick={() => setCurrentFolderId(null)}
-            className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${!currentFolderId ? 'bg-yeonji text-white' : 'bg-gray-100 text-gray-400'}`}
+            className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${!currentFolderId ? 'bg-yeonji text-white shadow-lg' : 'bg-gray-100 text-gray-400'}`}
           >
             🏠 Root
           </button>
           {currentFolderId && (
             <>
               <span className="text-gray-300">/</span>
-              <span className="px-4 py-1.5 rounded-full bg-gray-900 text-white text-[9px] font-black uppercase tracking-wider whitespace-nowrap">
-                📂 {folders.find(f => f.id === currentFolderId)?.name}
-              </span>
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gray-900 text-white text-[9px] font-black uppercase tracking-wider whitespace-nowrap">
+                <span>📂 {folders.find(f => f.id === currentFolderId)?.name}</span>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onDeleteFolder(currentFolderId); setCurrentFolderId(null); }}
+                  className="ml-2 hover:text-red-400 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
             </>
           )}
         </div>
 
-        {/* Mobile Grid: grid-cols-2 is essential for 2 columns on mobile */}
+        {/* 갤러리 그리드 */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
           {activeFolders.map((folder) => (
-            <div key={folder.id} onClick={() => setCurrentFolderId(folder.id)} className="bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:border-yeonji/20 hover:bg-white transition-all cursor-pointer text-center flex flex-col items-center justify-center">
-              <div className="text-3xl mb-2">📁</div>
+            <div key={folder.id} onClick={() => setCurrentFolderId(folder.id)} className="group bg-gray-50 rounded-2xl p-6 border border-gray-100 hover:border-yeonji/20 hover:bg-white transition-all cursor-pointer text-center flex flex-col items-center justify-center animate-fade-in">
+              <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">📁</div>
               <h3 className="text-[11px] md:text-sm font-black text-gray-900 truncate w-full uppercase">{folder.name}</h3>
             </div>
           ))}
 
           {activeProjects.map((project) => (
-            <div key={project.id} onClick={() => setSelectedProject(project)} className="group bg-white rounded-2xl overflow-hidden cursor-pointer shadow-sm border border-gray-100 transition-all hover:shadow-xl active:scale-95">
+            <div key={project.id} onClick={() => setSelectedProject(project)} className="group bg-white rounded-2xl overflow-hidden cursor-pointer shadow-sm border border-gray-100 transition-all hover:shadow-xl active:scale-95 animate-fade-in">
               <div className="aspect-square relative bg-gray-50 overflow-hidden">
                 {project.type === 'link' ? (
                   <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-gray-50 to-gray-100">
@@ -136,7 +166,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
         </div>
 
         {activeProjects.length === 0 && activeFolders.length === 0 && (
-          <div className="py-20 text-center border-2 border-dashed border-gray-100 rounded-[3rem]">
+          <div className="py-20 text-center border-2 border-dashed border-gray-100 rounded-[3rem] animate-fade-in">
             <p className="text-gray-300 font-black text-xs uppercase tracking-[0.5em]">No Assets Found</p>
           </div>
         )}

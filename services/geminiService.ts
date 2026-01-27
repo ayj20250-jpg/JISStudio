@@ -1,10 +1,8 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
-
-const API_KEY = process.env.API_KEY || "";
+import { GoogleGenAI } from "@google/genai";
 
 export const generateBrandStory = async (keywords: string, tone: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
   
   const prompt = `당신은 '연지스(Yeonjis)'의 전문 브랜드 카피라이터입니다. 
   사용자가 제공한 키워드: "${keywords}"와 톤: "${tone}"을 바탕으로, 
@@ -18,13 +16,13 @@ export const generateBrandStory = async (keywords: string, tone: string): Promis
       config: {
         temperature: 0.8,
         topP: 0.95,
-        maxOutputTokens: 1000,
       }
     });
 
+    // .text() 가 아닌 .text 속성으로 접근
     return response.text || "스토리를 생성하지 못했습니다. 다시 시도해 주세요.";
   } catch (error) {
     console.error("Gemini API Error:", error);
-    return "AI 엔진과의 연결에 문제가 발생했습니다.";
+    return "AI 엔진과의 연결에 문제가 발생했습니다. API 키 설정을 확인해주세요.";
   }
 };

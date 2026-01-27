@@ -1,8 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar.tsx';
 import Hero from './components/Hero.tsx';
 import About from './components/About.tsx';
+import Services from './components/Services.tsx';
+import AISection from './components/AISection.tsx';
 import UploadSection from './components/UploadSection.tsx';
 import Portfolio from './components/Portfolio.tsx';
 import SyncSection from './components/SyncSection.tsx';
@@ -27,10 +29,12 @@ const App: React.FC = () => {
           getAllFolders(),
           getPublicArchive()
         ]);
+        
         if (savedFolders) setFolders(savedFolders);
-        const combined = [...savedProjects, ...publicAssets];
+        
+        const combined = [...(savedProjects || []), ...(publicAssets || [])];
         const uniqueItems = Array.from(new Map(combined.map(item => [item.id, item])).values());
-        setUserProjects(uniqueItems.sort((a, b) => b.timestamp - a.timestamp));
+        setUserProjects(uniqueItems.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)));
       } catch (error) {
         console.error("Data load error:", error);
       } finally {
@@ -40,10 +44,19 @@ const App: React.FC = () => {
     loadData();
   }, []);
 
-  const handleAddToGallery = async (item: GalleryItem) => {
-    setUserProjects(prev => [item, ...prev]);
-    await saveProject(item);
-  };
+  const handleAddToGallery = useCallback(async (item: GalleryItem) => {
+    setUserProjects(prev => {
+      const exists = prev.find(p => p.id === item.id);
+      if (exists) return prev;
+      return [item, ...prev];
+    });
+
+    try {
+      await saveProject(item);
+    } catch (err) {
+      console.error("Storage save failed:", err);
+    }
+  }, []);
 
   const handleCreateFolder = async (folder: Folder) => {
     setFolders(prev => [...prev, folder]);
@@ -51,7 +64,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteFolder = async (folderId: string) => {
-    if (!confirm("폴더를 삭제하시겠습니까?")) return;
+    if (!confirm("폴더를 삭제하시겠습니까? (파일은 루트로 이동)")) return;
     await deleteFolderFromStorage(folderId);
     setFolders(prev => prev.filter(f => f.id !== folderId));
     setUserProjects(prev => prev.map(p => p.folderId === folderId ? { ...p, folderId: undefined } : p));
@@ -63,7 +76,6 @@ const App: React.FC = () => {
     setUserProjects(prev => prev.filter(p => p.id !== id));
   };
 
-  // 백업 기능: JSON 파일로 내보내기
   const exportData = () => {
     const data = JSON.stringify({ projects: userProjects.filter(p => !p.id.startsWith('public-')), folders }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
@@ -75,7 +87,6 @@ const App: React.FC = () => {
     URL.revokeObjectURL(url);
   };
 
-  // 복구 기능: JSON 파일 읽기
   const importData = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -89,7 +100,7 @@ const App: React.FC = () => {
         if (imported.folders) {
           for (const f of imported.folders) await saveFolder(f);
         }
-        alert("데이터가 성공적으로 복구되었습니다. 페이지를 새로고침합니다.");
+        alert("데이터가 복구되었습니다. 페이지를 새로고침합니다.");
         window.location.reload();
       } catch (err) {
         alert("잘못된 파일 형식입니다.");
@@ -99,12 +110,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden">
+    <div className="min-h-screen flex flex-col overflow-x-hidden animate-fade-in">
       <Navbar onUploadClick={() => setIsUploadModalOpen(true)} />
       
       <main className="flex-grow">
         <Hero onUploadClick={() => setIsUploadModalOpen(true)} />
         <About />
+        <Services />
+        <AISection />
         <UploadSection onPublish={handleAddToGallery} />
         
         <section className="relative">
