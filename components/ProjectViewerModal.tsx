@@ -22,7 +22,6 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
       const link = document.createElement('a');
       link.href = src;
       
-      // 파일 확장자 추출 및 파일명 생성
       let fileName = item.title;
       if (item.fileData instanceof File) {
         const ext = item.fileData.name.split('.').pop();
@@ -30,14 +29,11 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
           fileName = `${fileName}.${ext}`;
         }
       } else {
-        // 기본 확장자 매핑
         const extMap: Record<string, string> = { photo: 'jpg', video: 'mp4', audio: 'mp3', document: 'pdf' };
         fileName = `${fileName}.${extMap[item.type] || 'file'}`;
       }
 
       link.download = fileName;
-      
-      // 모바일 호환성을 위해 새 창 속성 부여 (일부 브라우저 대응)
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       
@@ -54,6 +50,8 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
 
   const renderContent = () => {
     const src = item.contentSrc || item.image;
+    const isPPT = src.toLowerCase().endsWith('.ppt') || src.toLowerCase().endsWith('.pptx');
+
     switch (item.type) {
       case 'video':
         return (
@@ -70,10 +68,27 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ item, onClose, 
           </div>
         );
       case 'document':
+        if (isPPT) {
+          // Office Online Viewer for PPT files
+          const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(src)}`;
+          return (
+            <div className="w-full h-[70vh] md:h-[80vh] bg-gray-100 rounded-3xl overflow-hidden border border-gray-200 shadow-inner flex flex-col">
+              <div className="bg-[#B7472A] px-6 py-3 flex justify-between items-center text-white">
+                <span className="text-[10px] font-black uppercase tracking-widest">PowerPoint Presentation</span>
+                <span className="text-[10px] font-bold">Live Stream Mode</span>
+              </div>
+              <iframe 
+                src={officeUrl} 
+                title={item.title} 
+                className="w-full flex-grow bg-white border-none"
+              />
+            </div>
+          );
+        }
         return (
           <div className="w-full h-[70vh] md:h-[80vh] bg-gray-100 rounded-3xl overflow-hidden border border-gray-200 shadow-inner flex flex-col">
-            <div className="bg-white px-6 py-3 border-b border-gray-200 flex justify-between items-center">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Premium Document Preview</span>
+            <div className="bg-gray-900 px-6 py-3 border-b border-gray-200 flex justify-between items-center text-white">
+              <span className="text-[10px] font-black uppercase tracking-widest">Document Preview</span>
               <span className="text-[10px] font-bold text-yeonji">Direct View Mode</span>
             </div>
             <iframe 

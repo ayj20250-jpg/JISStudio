@@ -11,7 +11,7 @@ const categories = [
   { id: 'photo', title: '사진', desc: '4K+, Raw Support', icon: '📸' },
   { id: 'video', title: '영상', desc: 'MP4 / MOV High', icon: '🎬' },
   { id: 'audio', title: '음악', desc: 'MP3 / WAV Lossless', icon: '🎵' },
-  { id: 'document', title: '문서', desc: 'PDF / Project Plan', icon: '📑' }
+  { id: 'document', title: '문서', desc: 'PDF / PPT / Project', icon: '📑' }
 ];
 
 const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
@@ -30,7 +30,6 @@ const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
       setIsCloudUploading(true);
       
       try {
-        // 1. 클라우드 서버(S3/CDN)에 업로드하고 영구 HTTPS URL 획득
         const persistentUrl = await uploadFileToCloud(file);
         setCloudUrl(persistentUrl);
       } catch (error) {
@@ -52,16 +51,17 @@ const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
       id: Math.random().toString(36).substr(2, 9),
       title: fileName.split('.')[0] || 'Untitled Project',
       category: categories.find(c => c.id === activeTab)?.title || '기타',
-      // 이미지인 경우 클라우드 URL을 그대로 사용, 아니면 기본 썸네일
-      image: activeTab === 'photo' ? cloudUrl : 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=400&q=80',
-      contentSrc: cloudUrl, // 전 기기 공통 사용 가능한 HTTPS URL
+      image: activeTab === 'photo' ? cloudUrl : 
+             fileName.toLowerCase().endsWith('.ppt') || fileName.toLowerCase().endsWith('.pptx') ? 
+             'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=400&q=80' : // PPT 전용 썸네일 느낌
+             'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=400&q=80',
+      contentSrc: cloudUrl,
       type: activeTab as any,
       timestamp: Date.now()
     };
 
     onPublish(newItem);
     
-    // 상태 초기화
     setActiveTab(null);
     setCloudUrl(null);
     setFileObject(null);
@@ -76,7 +76,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
           <span className="text-yeonji font-black tracking-[0.5em] uppercase text-[10px] mb-4 block">Archive Center</span>
           <h2 className="text-5xl md:text-8xl font-black mb-6 tracking-tighter leading-none">CLOUD UPLOAD</h2>
           <p className="text-gray-400 font-bold tracking-widest uppercase text-[10px]">
-            Persistent HTTPS Storage • Public-Read Access
+            Persistent HTTPS Storage • PDF & PPT Support
           </p>
         </div>
 
@@ -135,7 +135,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
                 <div className="bg-gray-50 p-8 md:p-10 rounded-[2.5rem] border border-gray-100">
                   <div className="flex items-center gap-6 mb-8">
                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm">
-                      ✅
+                      {fileName.toLowerCase().endsWith('.ppt') || fileName.toLowerCase().endsWith('.pptx') ? '📊' : '✅'}
                     </div>
                     <div className="overflow-hidden">
                       <p className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em] mb-1">Upload Complete</p>

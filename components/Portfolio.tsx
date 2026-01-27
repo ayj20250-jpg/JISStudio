@@ -24,7 +24,8 @@ const Portfolio: React.FC<PortfolioProps> = ({
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'photo' | 'video' | 'audio' | 'document'>('all');
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type: string, src?: string) => {
+    if (type === 'document' && src?.toLowerCase().endsWith('.ppt') || src?.toLowerCase().endsWith('.pptx')) return '📊';
     switch(type) {
       case 'video': return '🎬';
       case 'audio': return '🎵';
@@ -121,22 +122,25 @@ const Portfolio: React.FC<PortfolioProps> = ({
           </div>
         </div>
 
-        <div className="mb-10 flex items-center gap-4 animate-fade-in">
+        <div className="mb-10 flex items-center gap-4 animate-fade-in bg-gray-50 p-4 rounded-2xl border border-gray-100">
            <button 
             onClick={() => setCurrentFolderId(null)}
-            className={`text-[11px] font-black uppercase tracking-widest ${!currentFolderId ? 'text-yeonji underline' : 'text-gray-400 hover:text-gray-900'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${!currentFolderId ? 'bg-yeonji text-white shadow-lg' : 'text-gray-400 hover:text-gray-900 hover:bg-white'}`}
            >
-            ROOT
+            <span className="text-sm">🏠</span> ROOT (최상위)
            </button>
            {currentFolderId && (
              <>
                <span className="text-gray-200">/</span>
-               <span className="text-[11px] font-black uppercase tracking-widest text-yeonji">
-                 {currentFolderName}
-               </span>
+               <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200">
+                 <span className="text-sm">📂</span>
+                 <span className="text-[11px] font-black uppercase tracking-widest text-yeonji">
+                   {currentFolderName}
+                 </span>
+               </div>
                <button 
                  onClick={() => { if(confirm('폴더를 삭제하시겠습니까?')) { onDeleteFolder(currentFolderId); setCurrentFolderId(null); } }}
-                 className="ml-auto text-red-400 text-[9px] font-bold uppercase tracking-widest hover:underline"
+                 className="ml-auto text-red-400 text-[9px] font-bold uppercase tracking-widest hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
                >
                  Delete Folder
                </button>
@@ -183,14 +187,16 @@ const Portfolio: React.FC<PortfolioProps> = ({
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
-                  {/* Share Icon */}
                   <div className="absolute top-5 left-5 flex gap-2">
                     <span className="bg-white/95 backdrop-blur-md text-gray-900 px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-xl flex items-center gap-1.5">
                       <span className="w-1 h-1 bg-green-500 rounded-full" />
                       Global
                     </span>
-                    <span className="bg-gray-900 text-white px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-xl">
-                      {getTypeIcon(project.type)} {project.type}
+                    <span className={`px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest shadow-xl flex items-center gap-1.5 ${
+                      project.contentSrc?.toLowerCase().endsWith('.ppt') || project.contentSrc?.toLowerCase().endsWith('.pptx') 
+                      ? 'bg-[#B7472A] text-white' : 'bg-gray-900 text-white'
+                    }`}>
+                      {getTypeIcon(project.type, project.contentSrc)} {project.type}
                     </span>
                   </div>
 
