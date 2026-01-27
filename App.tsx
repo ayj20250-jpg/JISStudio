@@ -65,7 +65,7 @@ const App: React.FC = () => {
 
   // 백업 기능: JSON 파일로 내보내기
   const exportData = () => {
-    const data = JSON.stringify({ projects: userProjects, folders }, null, 2);
+    const data = JSON.stringify({ projects: userProjects.filter(p => !p.id.startsWith('public-')), folders }, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -85,13 +85,11 @@ const App: React.FC = () => {
         const imported = JSON.parse(event.target?.result as string);
         if (imported.projects) {
           for (const p of imported.projects) await saveProject(p);
-          setUserProjects(imported.projects);
         }
         if (imported.folders) {
           for (const f of imported.folders) await saveFolder(f);
-          setFolders(imported.folders);
         }
-        alert("데이터가 성공적으로 복구되었습니다.");
+        alert("데이터가 성공적으로 복구되었습니다. 페이지를 새로고침합니다.");
         window.location.reload();
       } catch (err) {
         alert("잘못된 파일 형식입니다.");
@@ -101,7 +99,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <Navbar onUploadClick={() => setIsUploadModalOpen(true)} />
       
       <main className="flex-grow">

@@ -18,6 +18,7 @@
             margin: 0;
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
         }
         .bg-mesh {
             position: fixed;
@@ -28,16 +29,17 @@
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { 
-          from { transform: translateY(60px); opacity: 0; } 
+          from { transform: translateY(40px); opacity: 0; } 
           to { transform: translateY(0); opacity: 1; } 
         }
-        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
-        .animate-slide-up { animation: slideUp 1s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.8s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 뷰어 최적화 */
+        /* 미디어 뷰어 최적화 */
         .asset-contain { object-fit: contain !important; width: 100%; height: 100%; }
+        img, video { -webkit-user-drag: none; }
     </style>
     <script type="importmap">
 {
@@ -45,7 +47,9 @@
     "react": "https://esm.sh/react@19.0.0",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "@google/genai": "https://esm.sh/@google/genai@1.34.0"
+    "@google/genai": "https://esm.sh/@google/genai@1.34.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
 }
 </script>
