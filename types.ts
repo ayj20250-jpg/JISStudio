@@ -25,7 +25,8 @@ export interface GalleryItem {
   image: string; 
   contentSrc?: string; 
   fileData?: Blob | File; 
-  type: 'photo' | 'video' | 'audio' | 'document';
-  folderId?: string; // 소속된 폴더 ID
+  type: 'photo' | 'video' | 'audio' | 'document' | 'link';
+  folderId?: string;
   timestamp: number;
+  isExternal?: boolean; // 외부 링크 여부
 }

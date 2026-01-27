@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import { GalleryItem } from '../types';
-import { uploadFileToCloud } from '../services/apiService';
+import { GalleryItem } from '../types.ts';
+import { uploadFileToCloud } from '../services/apiService.ts';
 
 interface UploadSectionProps {
   onPublish: (item: GalleryItem) => void;
@@ -10,50 +10,63 @@ interface UploadSectionProps {
 const categories = [
   { id: 'photo', title: '사진', desc: '4K+, Raw Support', icon: '📸' },
   { id: 'video', title: '영상', desc: 'MP4 / MOV High', icon: '🎬' },
-  { id: 'audio', title: '음악', desc: 'MP3 / WAV Lossless', icon: '🎵' },
-  { id: 'document', title: '문서', desc: 'PDF / PPT / Project', icon: '📑' }
+  { id: 'link', title: '링크', desc: 'URL Smart Sync', icon: '🔗' },
+  { id: 'document', title: '문서', desc: 'PDF / PPT / HWP', icon: '📑' }
 ];
 
 const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [isCloudUploading, setIsCloudUploading] = useState(false);
   const [cloudUrl, setCloudUrl] = useState<string | null>(null);
+  const [urlInput, setUrlInput] = useState('');
   const [fileName, setFileName] = useState('');
-  const [fileObject, setFileObject] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setFileName(file.name);
-      setFileObject(file);
       setIsCloudUploading(true);
-      
       try {
         const persistentUrl = await uploadFileToCloud(file);
         setCloudUrl(persistentUrl);
       } catch (error) {
-        alert("클라우드 업로드에 실패했습니다.");
-        console.error(error);
+        alert("업로드 실패");
       } finally {
         setIsCloudUploading(false);
       }
     }
   };
 
+  const handleUrlPublish = () => {
+    if (!urlInput.trim()) return;
+    
+    const isImage = /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(urlInput);
+    const newItem: GalleryItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      title: isImage ? '연결된 이미지' : '웹 사이트 카드',
+      category: '외부 링크',
+      image: isImage ? urlInput : 'https://images.unsplash.com/photo-1481487196290-c152efe083f5?auto=format&fit=crop&w=400&q=80',
+      contentSrc: urlInput,
+      type: isImage ? 'photo' : 'link',
+      timestamp: Date.now(),
+      isExternal: true
+    };
+    onPublish(newItem);
+    setUrlInput('');
+    setActiveTab(null);
+  };
+
   const handlePublish = () => {
-    if (!activeTab || !fileName || !cloudUrl) {
-      alert("업로드 중이거나 파일이 선택되지 않았습니다.");
-      return;
-    }
+    if (!activeTab || !fileName || !cloudUrl) return;
 
     const newItem: GalleryItem = {
       id: Math.random().toString(36).substr(2, 9),
-      title: fileName.split('.')[0] || 'Untitled Project',
+      title: fileName.split('.')[0],
       category: categories.find(c => c.id === activeTab)?.title || '기타',
       image: activeTab === 'photo' ? cloudUrl : 
              fileName.toLowerCase().endsWith('.ppt') || fileName.toLowerCase().endsWith('.pptx') ? 
-             'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=400&q=80' : // PPT 전용 썸네일 느낌
+             'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=400&q=80' :
              'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=400&q=80',
       contentSrc: cloudUrl,
       type: activeTab as any,
@@ -61,114 +74,68 @@ const UploadSection: React.FC<UploadSectionProps> = ({ onPublish }) => {
     };
 
     onPublish(newItem);
-    
     setActiveTab(null);
     setCloudUrl(null);
-    setFileObject(null);
     setFileName('');
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
-    <div id="upload-section" className="py-24 md:py-32 bg-gray-50/50">
+    <div id="upload-section" className="py-24 bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-16 md:mb-24">
+        <div className="text-center mb-16">
           <span className="text-yeonji font-black tracking-[0.5em] uppercase text-[10px] mb-4 block">Archive Center</span>
           <h2 className="text-5xl md:text-8xl font-black mb-6 tracking-tighter leading-none">CLOUD UPLOAD</h2>
-          <p className="text-gray-400 font-bold tracking-widest uppercase text-[10px]">
-            Persistent HTTPS Storage • PDF & PPT Support
-          </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {categories.map((cat) => (
             <button
               key={cat.id}
-              onClick={() => {
-                setActiveTab(cat.id);
-                setFileObject(null);
-                setFileName('');
-                setCloudUrl(null);
-              }}
-              className={`p-8 md:p-12 rounded-[2.5rem] md:rounded-[3.5rem] border-2 transition-all duration-500 flex flex-col items-center justify-center text-center group transform ${
-                activeTab === cat.id ? 'border-yeonji bg-white shadow-2xl scale-105' : 'border-transparent bg-white/40 hover:bg-white hover:scale-102'
-              }`}
+              onClick={() => { setActiveTab(cat.id); setCloudUrl(null); setUrlInput(''); }}
+              className={`p-8 rounded-[2.5rem] border-2 transition-all duration-500 flex flex-col items-center justify-center text-center bg-white ${activeTab === cat.id ? 'border-yeonji shadow-2xl scale-105' : 'border-transparent hover:scale-102'}`}
             >
-              <span className="text-4xl md:text-5xl mb-4 md:mb-8 group-hover:rotate-12 transition-transform duration-500">{cat.icon}</span>
-              <h3 className="text-base md:text-xl font-black mb-2">{cat.title}</h3>
-              <p className="text-[9px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed">{cat.desc}</p>
+              <span className="text-4xl mb-4">{cat.icon}</span>
+              <h3 className="text-base font-black mb-1">{cat.title}</h3>
+              <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{cat.desc}</p>
             </button>
           ))}
         </div>
 
-        {activeTab && (
-          <div className="max-w-3xl mx-auto bg-white rounded-[3rem] md:rounded-[4rem] p-8 md:p-16 shadow-2xl animate-fade-up border border-gray-100 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-2 h-full bg-yeonji" />
-            
+        {activeTab === 'link' && (
+          <div className="max-w-3xl mx-auto bg-white rounded-[3rem] p-10 shadow-2xl animate-fade-up border border-gray-100">
+             <h4 className="text-xl font-black mb-6 uppercase tracking-widest">Paste Website URL</h4>
+             <input 
+              type="text" 
+              className="w-full px-8 py-5 rounded-2xl bg-gray-50 border border-transparent focus:border-yeonji outline-none transition-all font-bold mb-6"
+              placeholder="https://example.com"
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+             />
+             <button onClick={handleUrlPublish} className="w-full bg-gray-900 text-white py-6 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-yeonji transition-all">Connect URL</button>
+          </div>
+        )}
+
+        {activeTab && activeTab !== 'link' && (
+          <div className="max-w-3xl mx-auto bg-white rounded-[3rem] p-10 shadow-2xl animate-fade-up border border-gray-100 relative overflow-hidden">
             {!cloudUrl && !isCloudUploading ? (
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="border-4 border-dashed border-gray-100 rounded-[2.5rem] md:rounded-[3rem] p-12 md:p-24 text-center cursor-pointer hover:border-yeonji/30 transition-all bg-gray-50/30 group"
-              >
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  onChange={handleFileChange}
-                />
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-white rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-sm group-hover:scale-110 transition-all">
-                  <span className="text-3xl md:text-4xl">🌍</span>
-                </div>
-                <h4 className="text-2xl md:text-3xl font-black mb-3">클라우드에 올리기</h4>
-                <p className="text-gray-400 text-xs md:text-base font-medium px-4">
-                  S3/CDN 서버에 직접 보관되어 모든 기기에서 즉시 확인 가능합니다.
-                </p>
+              <div onClick={() => fileInputRef.current?.click()} className="border-4 border-dashed border-gray-100 rounded-[2.5rem] p-16 text-center cursor-pointer hover:border-yeonji/30 transition-all bg-gray-50/30">
+                <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} />
+                <span className="text-4xl mb-6 block">📂</span>
+                <h4 className="text-2xl font-black mb-2">파일 선택</h4>
+                <p className="text-gray-400 text-sm">S3 Cloud 영구 보관용 업로드</p>
               </div>
             ) : isCloudUploading ? (
-              <div className="py-24 text-center flex flex-col items-center">
-                <div className="w-16 h-16 border-4 border-yeonji border-t-transparent rounded-full animate-spin mb-8" />
-                <p className="font-black text-gray-900 uppercase tracking-[0.3em] text-[10px]">Cloud Synching...</p>
-                <p className="text-gray-400 text-[9px] mt-2 font-bold uppercase tracking-widest">Generating Public HTTPS URL</p>
+              <div className="py-20 text-center flex flex-col items-center">
+                <div className="w-12 h-12 border-4 border-yeonji border-t-transparent rounded-full animate-spin mb-6" />
+                <p className="font-black text-gray-900 uppercase tracking-widest text-xs">Uploading to Storage...</p>
               </div>
             ) : (
-              <div className="space-y-10 animate-fade-in">
-                <div className="bg-gray-50 p-8 md:p-10 rounded-[2.5rem] border border-gray-100">
-                  <div className="flex items-center gap-6 mb-8">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm">
-                      {fileName.toLowerCase().endsWith('.ppt') || fileName.toLowerCase().endsWith('.pptx') ? '📊' : '✅'}
-                    </div>
-                    <div className="overflow-hidden">
-                      <p className="text-[10px] font-black text-green-500 uppercase tracking-[0.2em] mb-1">Upload Complete</p>
-                      <h5 className="text-xl md:text-2xl font-black truncate text-gray-900">{fileName}</h5>
-                    </div>
-                  </div>
-                  
-                  {activeTab === 'photo' && cloudUrl && (
-                    <div className="mb-8 rounded-3xl overflow-hidden border border-gray-200 shadow-sm aspect-video">
-                      <img src={cloudUrl} alt="Preview" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  
-                  <div className="flex flex-col gap-2 p-4 bg-white rounded-xl border border-gray-100 overflow-hidden">
-                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Public CDN URL</p>
-                    <code className="text-[10px] text-yeonji truncate font-mono">{cloudUrl}</code>
-                  </div>
+              <div className="space-y-8">
+                <div className="bg-gray-50 p-8 rounded-[2.5rem] border border-gray-100 flex items-center gap-6">
+                  <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">✅</div>
+                  <h5 className="text-xl font-black truncate">{fileName}</h5>
                 </div>
-
-                <div className="flex flex-col md:flex-row gap-4">
-                  <button 
-                    onClick={() => { setCloudUrl(null); setFileObject(null); }}
-                    className="flex-1 bg-gray-100 text-gray-500 py-6 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all transform active:scale-95"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    onClick={handlePublish}
-                    className="flex-[2.5] bg-gray-900 text-white py-6 rounded-2xl font-black text-sm md:text-lg uppercase tracking-widest hover:bg-yeonji transition-all shadow-2xl shadow-gray-200 transform active:scale-95"
-                  >
-                    Confirm & Publish
-                  </button>
-                </div>
+                <button onClick={handlePublish} className="w-full bg-gray-900 text-white py-6 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-yeonji transition-all">Confirm & Publish</button>
               </div>
             )}
           </div>
